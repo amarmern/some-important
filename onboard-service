@@ -1,0 +1,1378 @@
+import Axios from 'axios';
+import {
+  environments,
+  urlsForEnviromentTypes as urlsForEnvironments,
+  uipTeamAssetIds,
+} from '../../../Property/ControlConfig';
+import * as OnboardingServiceMockData from '../../../Property/MockedApiData/OnboardingService';
+import { isCookieRequired } from './IMD';
+import * as MockApi from '../../../Property/MockedApiData';
+
+/**
+ * Function to get the adaptor/dataset metadata to show for BU
+ * @param {*} environment Currently deployed environment
+ * @param {*} adaptorName The adaptor/dataset name
+ * @returns {void} Returns the Response/Error
+ */
+export const getPipelines = ({ environment, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipelines;
+  }
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/pipelines?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipelines?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * Function to get the adaptor/dataset metadata to show for BU
+ * @param {*} environment Currently deployed environment
+ * @param {*} adaptorName The adaptor/dataset name
+ * @returns {void} Returns the Response/Error
+ */
+export const getPipelineDetails = ({ environment, pipelineName, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipeline;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/pipeline/${pipelineName}?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipeline/${pipelineName}?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the list of all Source types
+ * @param {*} param0 params passed {environment - either e2e/Prod}
+ * @returns {void} Returns the Response/Error
+ */
+export const getAllSourceTypes = ({ environment, userSelectedEnv }) => {
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/onboard/sources?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    (environment.toLowerCase() === 'prod' || environment.toLowerCase() === 'local') &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/onboard/sources?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the List of Datatypes for the selected Source Type
+ * @param {*} param0 params passed {environment - either e2e/Prod, sourceType - file/mysql/mssql...}
+ * @returns {void} Returns the Response/Error
+ */
+export const getDatatypesForSelectedSource = ({ environment, sourceType, userSelectedEnv }) => {
+  // if (environment === environments.local) {
+  //   return OnboardingServiceMockData.getPipeline;
+  // }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/onboard/sources/${sourceType}/dataTypes?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    (environment.toLowerCase() === 'prod' || environment.toLowerCase() === 'local') &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/onboard/sources/${sourceType}/dataTypes?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to upload the template to MDR
+ * @param  {*} args Contains info like environment, xlsFile, catalogEntity, stewardEmail, notificationEmail and currentUser
+ * @returns {*} Returns the Response
+ */
+export const uploadCataloguedXlsFile = ({
+  environment,
+  xlsFile,
+  catalogEntity,
+  notificationEmail,
+  currentUser,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.uploadCataloguedXlsFile;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${
+    urlsForEnvironments.onboarding[environment]
+  }/v2/onboard/requests/upload?dataCatalogDatasourceName=${decodeURI(
+    catalogEntity,
+  )}&notificationEmail=${notificationEmail}&username=${currentUser}&intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${
+      urlsForEnvironments.onboarding[environment]
+    }/e2e/v2/onboard/requests/upload?dataCatalogDatasourceName=${decodeURI(
+      catalogEntity,
+    )}&notificationEmail=${notificationEmail}&username=${currentUser}&intuit_apikey=${apiKey}`;
+  }
+
+  const uploadFormData = new FormData();
+  uploadFormData.append('file', xlsFile);
+
+  return Axios.post(url, uploadFormData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Access-Control-Allow-Origin': '*',
+    },
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * Function to get the adaptor/dataset metadata to show for BU
+ * @param {*} environment Currently deployed environment
+ * @param {*} adaptorName The adaptor/dataset name
+ * @returns {void} Returns the Response/Error
+ */
+export const getSavedPipelineDetails = ({ environment, pipelineName, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipeline;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v2/pipeline/${pipelineName}/saved?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v2/pipeline/${pipelineName}/saved?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the adaptor/dataset metadata to show for BU
+ * @param {*} environment Currently deployed environment
+ * @param {*} adaptorName The adaptor/dataset name
+ * @returns {void} Returns the Response/Error
+ */
+export const getPipelineCreateEnvStatus = ({ environment, pipelineName, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipeline;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/pipelines/${pipelineName}/request/env/latest?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/pipelines/${pipelineName}/request/env/latest?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * API call to email the XLS template to user
+ * @param  {*} args Contains info like environment, catalogEntity, dbType, notificationEmail, currentUser and selectedTables
+ * @returns {*} Returns the Response
+ */
+export const emailCataloguedXlsFile = ({
+  environment,
+  catalogEntity,
+  dbType,
+  notificationEmail,
+  currentUser,
+  listOfTables,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.uploadCataloguedXlsFile;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  // const apiKey = urlsForEnvironments.apiKey[environment];
+  // const url = `${
+  //   urlsForEnvironments.onboarding[environment]
+  // }/v2/onboard/requests/notify?dataCatalogDatasourceName=${decodeURI(
+  //   catalogEntity,
+  // )}&notificationEmail=${notificationEmail}&username=${currentUser}&dbType=${dbType}&entityData=${encodeURI(
+  //   JSON.stringify(listOfTables),
+  // )}&intuit_apikey=${apiKey}`;
+  let url = `${urlsForEnvironments.onboarding[environment]}/v2/onboard/requests/notify`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v2/onboard/requests/notify`;
+  }
+
+  const payload = {
+    dataCatalogDatasourceName: decodeURI(catalogEntity),
+    notificationEmail,
+    username: currentUser,
+    dbType,
+    // intuit_apikey: apiKey,
+    entityData: listOfTables,
+    // entityData: JSON.stringify(listOfTables),
+  };
+
+  return Axios.post(url, payload, {
+    // params: requestParams,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      // accept: 'application/json',
+      // Authorization: `Intuit_APIKey intuit_apikey=${apiKey}`,
+    },
+    // data: null,
+    withCredentials: isCookieRequired(environment),
+    // params: filterParams,
+    // data: filterParams,
+    // data: null,
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to upload the template to MDR
+ * @param  {*} args Contains info like environment, xlsFile, catalogEntity, stewardEmail, notificationEmail and currentUser
+ * @returns {*} Returns the Response
+ */
+export const createEnvironmentForSavedPipeline = ({
+  environment,
+  pipelineName,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.createEnvironmentForSavedPipeline;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/onboard/pipeline/${pipelineName}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/onboard/pipeline/${pipelineName}`;
+  }
+
+  return Axios.post(
+    url,
+    {},
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      withCredentials: isCookieRequired(environment),
+    },
+  )
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to save pipeline in UIP
+ * @param  {*} args Contains info like environment, upsertRequest
+ * @returns {*} Returns the Response
+ */
+export const savePipelineV3 = ({ environment, upsertRequest, userSelectedEnv, contextDetails }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.savePipelineV3;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/save/pipeline/request?intuit_apikey=${apiKey}`;
+  if (contextDetails && contextDetails.sandbox) {
+    contextDetails.sandbox.logger.log(`sandbox savePipelineV3 Environment: ${environment}`);
+    // contextDetails.sandbox.logger.log(`sandbox savePipelineV3 AssetID: ${assetId}`)
+  }
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/save/pipeline/request?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.post(url, upsertRequest, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to onboard crawler for a pipeline in UIP
+ * @param  {*} args Contains info like environment, pipelineName
+ * @returns {*} Returns the Response
+ */
+export const onboardCrawler = ({ environment, pipelineName, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.onboardCrawler;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/pipeline/${pipelineName}/crawler/onboard?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/pipeline/${pipelineName}/crawler/onboard?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.post(
+    url,
+    {},
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      withCredentials: isCookieRequired(environment),
+    },
+  )
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to trigger crawler for a pipeline in UIP
+ * @param  {*} args Contains info like environment, pipelineName
+ * @returns {*} Returns the Response
+ */
+export const triggerCrawler = ({ environment, pipelineName, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.triggerCrawler;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/pipelines/${pipelineName}/crawler/run?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/pipelines/${pipelineName}/crawler/run?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.post(
+    url,
+    {},
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      withCredentials: isCookieRequired(environment),
+    },
+  )
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * Function to get the list of all Onboarded Pipeline names to check for the entered pipeline name
+ * @param {*} param0 params passed {environment: <e2e/prod>}
+ * @returns {*} Returns the Response
+ */
+export const getAllOnboardedPipelines = ({ environment, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipelines;
+  }
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/pipelines?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipelines?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the list of all Onboarded Pipeline names
+ * @param {*} param0 params passed {environment: <e2e/prod>, businessUnit: <Business Unit>}
+ * @returns {*} Returns the Response
+ */
+export const getOwnedOnboardedPipelines = ({
+  environment,
+  businessUnit,
+  assetId,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipelines;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${
+    urlsForEnvironments.onboarding[environment]
+  }/v1/pipelines?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${
+      urlsForEnvironments.onboarding[environment]
+    }/e2e/v1/pipelines?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+  }
+
+  if (uipTeamAssetIds[environment].includes(assetId)) {
+    url = `${urlsForEnvironments.onboarding[environment]}/v1/pipelines?intuit_apikey=${apiKey}`;
+
+    if (
+      environment &&
+      environment.toLowerCase() === 'prod' &&
+      userSelectedEnv &&
+      userSelectedEnv.toLowerCase() === 'e2e'
+    ) {
+      url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipelines?intuit_apikey=${apiKey}`;
+    }
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the list of all Saved Pipeline names
+ * @param {*} param0 params passed {environment: <e2e/prod>, businessUnit: <Business Unit>}
+ * @returns {*} Returns the Response
+ */
+export const getAllSavedPipelines = ({ environment, businessUnit, userSelectedEnv }) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getPipelines;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${
+    urlsForEnvironments.onboarding[environment]
+  }/v3/pipelines/saved?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${
+      urlsForEnvironments.onboarding[environment]
+    }/e2e/v3/pipelines/saved?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the list of all Onboarded & Saved Pipeline names and also to get the list of all sources
+ * @param {*} param0 params passed {environment: <e2e/prod>, businessUnit: <Business Unit>}
+ * @returns {*} Returns the Response
+ */
+export const getInitialLoadDetails = ({
+  environment,
+  businessUnit,
+  assetId,
+  userSelectedEnv,
+  contextDetails,
+}) => {
+  if (environment === environments.local) {
+    return [];
+  }
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+
+  let onboardUrl = `${urlsForEnvironments.onboarding[environment]}/v1/pipelines?buName=${businessUnit}&intuit_apikey=${apiKey}`;
+  let savedUrl = `${
+    urlsForEnvironments.onboarding[environment]
+  }/v3/pipelines/saved?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+  let srcUrl = `${urlsForEnvironments.onboarding[environment]}/v1/onboard/sources?intuit_apikey=${apiKey}`;
+  if (
+    environment &&
+    (environment.toLowerCase() === 'prod' || environment.toLowerCase() === 'local') &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    onboardUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipelines?buName=${businessUnit}&intuit_apikey=${apiKey}`;
+    savedUrl = `${
+      urlsForEnvironments.onboarding[environment]
+    }/e2e/v3/pipelines/saved?buName=${encodeURIComponent(businessUnit)}&intuit_apikey=${apiKey}`;
+    srcUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/onboard/sources?intuit_apikey=${apiKey}`;
+  }
+
+  if (contextDetails && contextDetails.sandbox) {
+    contextDetails.sandbox.logger.log(`sandbox getInitialLoadDetails Environment : ${environment}`);
+    contextDetails.sandbox.logger.log(`sandbox getInitialLoadDetails AssetID : ${assetId}`);
+  }
+  if (uipTeamAssetIds[environment].includes(assetId)) {
+    onboardUrl = `${urlsForEnvironments.onboarding[environment]}/v1/pipelines?intuit_apikey=${apiKey}`;
+    savedUrl = `${urlsForEnvironments.onboarding[environment]}/v3/pipelines/saved?intuit_apikey=${apiKey}`;
+    if (
+      environment &&
+      environment.toLowerCase() === 'prod' &&
+      userSelectedEnv &&
+      userSelectedEnv.toLowerCase() === 'e2e'
+    ) {
+      onboardUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/pipelines?intuit_apikey=${apiKey}`;
+      savedUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/pipelines/saved?intuit_apikey=${apiKey}`;
+    }
+  }
+
+  return Axios.all([
+    Axios.get(onboardUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      data: null,
+      withCredentials: isCookieRequired(environment),
+    }),
+    Axios.get(savedUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      data: null,
+      withCredentials: isCookieRequired(environment),
+    }),
+    Axios.get(srcUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      data: null,
+      withCredentials: isCookieRequired(environment),
+    }),
+  ])
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * API call to get the Non-onboarded tables for a schema
+ * @param {*} environment Currently deployed environment
+ * @param {*} pipelineName The pipeline name
+ * @param {*} schemaName The schema name
+ * @returns {*} Returns the Response
+ */
+export const getNonOnboardedTables = ({
+  environment,
+  pipelineName,
+  schemaName,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.getNonOnboardedTables;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/pipeline/${pipelineName}/schemas/${schemaName}/non-onboarded-tables?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/pipeline/${pipelineName}/schemas/${schemaName}/non-onboarded-tables?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    data: null,
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * API call to onboard tables in UIP
+ * @param  {*} args Contains info like environment, upsertRequest
+ * @returns {*} Returns the Response
+ */
+export const onboardTablesV3 = ({
+  environment,
+  pipelineName,
+  schemaName,
+  tableNames,
+  scheduleTiming,
+  scheduleFrequency,
+  userCorpId,
+  notificationEmail,
+  userSelectedEnv,
+}) => {
+  if (environment === environments.local) {
+    return OnboardingServiceMockData.onboardTablesV3;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v3/onboard/tables?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v3/onboard/tables?intuit_apikey=${apiKey}`;
+  }
+
+  const onboardTablesPayload = {
+    userName: userCorpId,
+    notification: notificationEmail,
+    additionalProperties: '',
+    requestName: `onboarding-${pipelineName}-dataset`,
+    onboardingGroups: [
+      {
+        frequency: scheduleFrequency,
+        jobStart: scheduleTiming,
+        pipelines: [
+          {
+            pipelineName,
+            schemas: [
+              {
+                schemaName,
+                tables: tableNames.map((tableName) => {
+                  const tableObj = {};
+                  tableObj.tableName = tableName;
+                  return tableObj;
+                }),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  return Axios.post(url, onboardTablesPayload, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+    withCredentials: isCookieRequired(environment),
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+};
+
+/**
+ * function to get the status of Test Connections
+ * @param {*} param0 list of params passed {environment: <e2e/prod/local>, srcType: <rdbms/s3>, payLoadDetails: <Payload for rdbms/s3>}
+ * @returns {void} Returns Response/Error
+ */
+export const getTestConnectionStatus = ({
+  environment,
+  srcType,
+  payLoadDetails,
+  userSelectedEnv,
+}) => {
+  // if (environment === 'local') {
+  //   return MockApi.getTestConnectionStatusResponse;
+  // }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/onboard/testconnection/${srcType}?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/onboard/testconnection/${srcType}?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios({
+    method: 'post',
+    url,
+    data: payLoadDetails,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the Dataset lists for the Progress
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export const getOnboardedDatasetList = ({ onboardedBy, environment, userSelectedEnv }) => {
+  if (environment === 'local') {
+    return [];
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/onboard/requests/${onboardedBy}?intuit_apikey=${apiKey}`;
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/onboard/requests/${onboardedBy}?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: null,
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * function to retry failed onboarding requests
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export const retryFailedRequest = ({ requestId, environment, userSelectedEnv }) => {
+  if (environment === 'local') {
+    return MockApi.retryFailedRequestResponse[requestId];
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+
+  let url = `${urlsForEnvironments.onboarding[environment]}/v2/onboard/retry/${requestId}?intuit_apikey=${apiKey}`;
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v2/onboard/retry/${requestId}?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios({
+    method: 'post',
+    url,
+    data: requestId,
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to get the Status of OnBoard in Progress - Changed to V2
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export const getOnboardStatus = ({ requestId, environment, userSelectedEnv }) => {
+  if (environment === 'local') {
+    return MockApi.getOnboardStatusResponse[requestId];
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v2/onboard/status/${requestId}?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v2/onboard/status/${requestId}?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: null,
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to check the access permission of the user
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export function checkAccessPermissionsForAdminAndDevops({ assetId, environment }) {
+  if (environment === 'local') {
+    return MockApi.checkAccessPermissionsResponse;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  // const apiKey = urlsForEnvironments.apiKey[environment];
+  const url = `${urlsForEnvironments.developer[environment]}/resources/${assetId}/admin,devops`;
+
+  return Axios.head(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+}
+
+/**
+ * Function to get the list of all onboarded dataset
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export const getAllPipelineDetails = ({
+  pageNumber,
+  pageSize,
+  searchObj,
+  environment,
+  userSelectedEnv,
+}) => {
+  if (environment === 'local') {
+    return MockApi.getOnboardedDatasetDetailsResponse;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  // const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}`;
+  }
+
+  if (searchObj && Object.keys(searchObj).length > 0) {
+    let spUrl = `${urlsForEnvironments.onboarding[environment]}/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}`;
+    if (
+      environment &&
+      environment.toLowerCase() === 'prod' &&
+      userSelectedEnv &&
+      userSelectedEnv.toLowerCase() === 'e2e'
+    ) {
+      spUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}`;
+    }
+    if (searchObj.filter !== 'all') {
+      let allUrl = `${urlsForEnvironments.onboarding[environment]}/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}&${searchObj.filter}=${searchObj.srcStr}`;
+      if (
+        environment &&
+        environment.toLowerCase() === 'prod' &&
+        userSelectedEnv &&
+        userSelectedEnv.toLowerCase() === 'e2e'
+      ) {
+        allUrl = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/dataset/allPipelines?page=${pageNumber}&size=${pageSize}&${searchObj.filter}=${searchObj.srcStr}`;
+      }
+      return Axios.get(allUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        data: null,
+        withCredentials: true,
+      })
+        .then((response) => {
+          return response;
+        })
+        .catch((error) => {
+          const errObj = {
+            errJson: error.toJSON(),
+            errResponse: error.response,
+          };
+          return errObj;
+        });
+    }
+    return Axios.get(spUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: null,
+      withCredentials: true,
+    })
+      .then((response) => {
+        return response;
+      })
+      .catch((error) => {
+        const errObj = {
+          errJson: error.toJSON(),
+          errResponse: error.response,
+        };
+        return errObj;
+      });
+  }
+
+  return Axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: null,
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * function to claim the seleced Pipelines
+ * @param {*} param0 list of params
+ * @returns {void} Returns Response/Error
+ */
+export const claimPipelineDetails = ({ payLoadDetails, environment, userSelectedEnv }) => {
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/dataset/claim?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/dataset/claim?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios({
+    method: 'post',
+    url,
+    data: payLoadDetails,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * function to save the pipeline details from Edit Modal in Dataset tab
+ * @param {*} param0 list of params
+ * @returns {void} Returns Response/Error
+ */
+export const updatePipelineDetails = ({ payLoadDetails, environment, userSelectedEnv }) => {
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v1/dataset/patch?intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v1/dataset/patch?intuit_apikey=${apiKey}`;
+  }
+
+  return Axios({
+    method: 'post',
+    url,
+    data: payLoadDetails,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to Onboard the non-onboarded tables
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export const onBoardScheduleDetailsForRebootstrap = ({
+  payLoadDetails,
+  environment,
+  userSelectedEnv,
+}) => {
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  const apiKey = urlsForEnvironments.apiKey[environment];
+  let url = `${urlsForEnvironments.onboarding[environment]}/v2/onboard/tables?task=PARQUET&intuit_apikey=${apiKey}`;
+
+  if (
+    environment &&
+    environment.toLowerCase() === 'prod' &&
+    userSelectedEnv &&
+    userSelectedEnv.toLowerCase() === 'e2e'
+  ) {
+    url = `${urlsForEnvironments.onboarding[environment]}/e2e/v2/onboard/tables?task=PARQUET&intuit_apikey=${apiKey}`;
+  }
+
+  return Axios({
+    method: 'post',
+    url,
+    data: payLoadDetails,
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      const errObj = {
+        errJson: error.toJSON(),
+        errResponse: error.response,
+      };
+      return errObj;
+    });
+};
+
+/**
+ * Function to check the access permission of the user
+ * @param {*} param0 list of params
+ * @returns {void} Returns the Response/Error
+ */
+export function checkAccessPermissions({ assetId, environment }) {
+  if (environment === 'local') {
+    return MockApi.checkAccessPermissionsResponse;
+  }
+
+  Axios.defaults.headers.common.Authorization = urlsForEnvironments.authKey[environment];
+  // const apiKey = urlsForEnvironments.apiKey[environment];
+  const url = `${urlsForEnvironments.developer[environment]}/resources/${assetId}/admin,devops,developers`;
+
+  return Axios.head(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    withCredentials: true,
+  })
+    .then((response) => {
+      return response;
+    })
+    .catch((error) => {
+      return error.toJSON();
+    });
+}
